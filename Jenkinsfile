@@ -3,7 +3,7 @@ pipeline {
     agent any
 
     tools {
-        maven "M3.3.3"
+        maven "M3.6"
     }
     triggers {
         cron('H */8 * * *') //regular builds
