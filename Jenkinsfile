@@ -11,22 +11,51 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps { //Checking out the repo
+        stage('Checking out the repo') {
+            steps {
                 checkout changelog: true, poll: true, scm: [$class: 'GitSCM', branches: [[name: '*/master']], 
                 extensions: scm.extensions, userRemoteConfigs: [[credentialsId: 'github_token', url: 'https://github.com/jpenekusu/pipeline.git']]]
                 sh "ls -lart ./"    
             }
         }
-        stage('Unit & Integration Tests') {
+        stage('Compling ...') {
             steps {
-                sh "mvn clean package"
+                sh "mvn compile"
+            }
+        }        
+        stage('Testing ...') {
+            steps {
+                sh "mvn test"
+            }
+        }        
+        stage('Building ...') {
+            steps {
+                sh "mvn -B -DskipTests clean package"
             }
         }
+        stage('Code coverage') {
+            steps {
+                sh "mvn clean cobertura:cobertura install test -Dcobertura.report.format=xml"
+            }
+            post {
+                always {
+                    junit '**/test-reports/*.xml'
+                    step([$class: 'CoberturaPublisher'], autoUpdateHealth: true, coberturaReportFile: '**/target/site/cobertura/*.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 2, onlyStable: false, sourceEncoding: 'ASCII')
+                }
+            }
+        }
+        stage('Building and sending results to Sonar ...') {
+            steps {
+                withSonarQubeEnv(installationName: 'SonarInstall', credentialsId: 'sonar_token') {
+                    sh 'mvn -B -DskipTests clean package sonar:sonar'
+                }
+            }
+        }                
     }
     post {
         always { //Send an email to the person that broke the build
-            sh "echo 'in Always'"
+            junit '**/target/surefire-reports/TEST-*.xml'
+            archiveArtifacts 'target/*.jar' 
         }
     }
 }
