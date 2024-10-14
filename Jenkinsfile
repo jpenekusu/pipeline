@@ -2,6 +2,9 @@ pipeline {
     
     agent any
 
+    tools {
+        maven "M3"
+    }
     triggers {
         cron('H */8 * * *') //regular builds
         pollSCM('* * * * *') //polling for changes, here once a minute
