@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps { //Checking out the repo
                 checkout changelog: true, poll: true, scm: [$class: 'GitSCM', branches: [[name: '*/master']], 
-                extensions: scm.extensions, userRemoteConfigs: [[credentialsId: 'git', url: 'https://github.com/jpenekusu/pipeline.git']]]
+                extensions: scm.extensions, userRemoteConfigs: [[credentialsId: 'github_token', url: 'https://github.com/jpenekusu/pipeline.git']]]
                 sh "ls -lart ./"    
             }
         }
